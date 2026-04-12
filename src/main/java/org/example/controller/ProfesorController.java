@@ -28,7 +28,6 @@ public class ProfesorController {
         Optional<Profesor> profesor = profesores.stream()
                 .filter(p -> p.getId().equals(id))
                 .findFirst();
-
         if (profesor.isPresent()) {
             return ResponseEntity.ok(profesor.get());
         }
@@ -38,7 +37,9 @@ public class ProfesorController {
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Profesor profesor) {
-        profesor.setId(idCounter.getAndIncrement());
+        if (profesor.getId() == null || profesor.getId() == 0) {
+            profesor.setId(idCounter.getAndIncrement());
+        }
         profesores.add(profesor);
         return ResponseEntity.status(HttpStatus.CREATED).body(profesor);
     }

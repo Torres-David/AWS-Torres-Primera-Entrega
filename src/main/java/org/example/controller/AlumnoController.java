@@ -28,7 +28,6 @@ public class AlumnoController {
         Optional<Alumno> alumno = alumnos.stream()
                 .filter(a -> a.getId().equals(id))
                 .findFirst();
-
         if (alumno.isPresent()) {
             return ResponseEntity.ok(alumno.get());
         }
@@ -38,7 +37,9 @@ public class AlumnoController {
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Alumno alumno) {
-        alumno.setId(idCounter.getAndIncrement());
+        if (alumno.getId() == null || alumno.getId() == 0) {
+            alumno.setId(idCounter.getAndIncrement());
+        }
         alumnos.add(alumno);
         return ResponseEntity.status(HttpStatus.CREATED).body(alumno);
     }

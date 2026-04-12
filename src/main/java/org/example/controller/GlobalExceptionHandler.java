@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -30,8 +32,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleBadRequest(HttpMessageNotReadableException ex) {
         Map<String, String> response = new HashMap<>();
-        response.put("mensaje", "Error en el formato del JSON o tipo de dato incorrecto");
-        response.put("detalle", ex.getMostSpecificCause().getMessage());
+        Throwable cause = ex.getCause();
+
+        if (cause instanceof InvalidFormatException ife) {
+            response.put("mensaje", "Tipo de dato incorrecto en el campo: " +
+                    ife.getPath().stream()
+                            .map(JsonMappingException.Reference::getFieldName)
+                            .reduce("", (a, b) -> a.isEmpty() ? b : a + "." + b));
+            response.put("detalle", ife.getOriginalMessage());
+        } else if (cause instanceof JsonMappingException jme) {
+            response.put("mensaje", "Error de tipo de dato: " +
+                    jme.getPath().stream()
+                            .map(JsonMappingException.Reference::getFieldName)
+                            .reduce("", (a, b) -> a.isEmpty() ? b : a + "." + b));
+            response.put("detalle", jme.getOriginalMessage());
+        } else {
+            response.put("mensaje", "Error en el formato del JSON o tipo de dato incorrecto");
+            response.put("detalle", ex.getMostSpecificCause().getMessage());
+        }
+
         return ResponseEntity.badRequest().body(response);
     }
 
