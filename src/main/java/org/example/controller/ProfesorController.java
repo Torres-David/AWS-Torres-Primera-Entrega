@@ -2,68 +2,65 @@ package org.example.controller;
 
 import jakarta.validation.Valid;
 import org.example.model.Profesor;
+import org.example.repository.ProfesorRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/profesores")
 public class ProfesorController {
 
-    private final List<Profesor> profesores = new ArrayList<>();
-    private final AtomicLong idCounter = new AtomicLong(1);
+    private final ProfesorRepository profesorRepository;
+
+    public ProfesorController(ProfesorRepository profesorRepository) {
+        this.profesorRepository = profesorRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<Profesor>> getAll() {
-        return ResponseEntity.ok(profesores);
+        return ResponseEntity.ok(profesorRepository.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id) {
-        Optional<Profesor> profesor = profesores.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
-        if (profesor.isPresent()) {
-            return ResponseEntity.ok(profesor.get());
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Profesor no encontrado con id: " + id));
+        return profesorRepository.findById(id)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorResponse("Profesor no encontrado con id: " + id)));
     }
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Profesor profesor) {
-        if (profesor.getId() == null || profesor.getId() == 0) {
-            profesor.setId(idCounter.getAndIncrement());
-        }
-        profesores.add(profesor);
-        return ResponseEntity.status(HttpStatus.CREATED).body(profesor);
+        Profesor saved = profesorRepository.save(profesor);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody Profesor profesorActualizado) {
-        for (int i = 0; i < profesores.size(); i++) {
-            if (profesores.get(i).getId().equals(id)) {
-                profesorActualizado.setId(id);
-                profesores.set(i, profesorActualizado);
-                return ResponseEntity.ok(profesorActualizado);
-            }
+        Optional<Profesor> opt = profesorRepository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("Profesor no encontrado con id: " + id));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Profesor no encontrado con id: " + id));
+        Profesor existing = opt.get();
+        existing.setNombres(profesorActualizado.getNombres());
+        existing.setApellidos(profesorActualizado.getApellidos());
+        existing.setNumeroEmpleado(profesorActualizado.getNumeroEmpleado());
+        existing.setHorasClase(profesorActualizado.getHorasClase());
+        return ResponseEntity.ok(profesorRepository.save(existing));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        boolean removed = profesores.removeIf(p -> p.getId().equals(id));
-        if (removed) {
-            return ResponseEntity.ok(new ErrorResponse("Profesor eliminado correctamente"));
+        if (!profesorRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("Profesor no encontrado con id: " + id));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Profesor no encontrado con id: " + id));
+        profesorRepository.deleteById(id);
+        return ResponseEntity.ok(new ErrorResponse("Profesor eliminado correctamente"));
     }
 }

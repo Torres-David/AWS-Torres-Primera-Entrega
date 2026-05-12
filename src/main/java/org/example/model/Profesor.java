@@ -1,11 +1,16 @@
 package org.example.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Persistable;
 
-public class Profesor {
+@Entity
+@Table(name = "profesores")
+public class Profesor implements Persistable<Long> {
 
+    @Id
     private Long id;
 
     @NotNull(message = "El campo numeroEmpleado no debe estar vacío")
@@ -21,6 +26,16 @@ public class Profesor {
     @NotNull(message = "El campo horasClase no debe estar vacío")
     @DecimalMin(value = "0.0", inclusive = true, message = "Las horas de clase no pueden ser negativas")
     private Integer horasClase;
+
+    @Transient
+    private boolean isNew = true;
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() { this.isNew = false; }
+
+    @Override
+    public boolean isNew() { return isNew; }
 
     public Profesor() {}
 

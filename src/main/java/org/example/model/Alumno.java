@@ -1,12 +1,17 @@
 package org.example.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Persistable;
 
-public class Alumno {
+@Entity
+@Table(name = "alumnos")
+public class Alumno implements Persistable<Long> {
 
+    @Id
     private Long id;
 
     @NotBlank(message = "El campo nombres no debe estar vacío")
@@ -22,6 +27,20 @@ public class Alumno {
     @DecimalMin(value = "0.0", inclusive = true, message = "El promedio debe ser al menos 0.0")
     @DecimalMax(value = "10.0", inclusive = true, message = "El promedio no debe ser mayor a 10.0")
     private Double promedio;
+
+    private String fotoPerfilUrl;
+
+    private String password;
+
+    @Transient
+    private boolean isNew = true;
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() { this.isNew = false; }
+
+    @Override
+    public boolean isNew() { return isNew; }
 
     public Alumno() {}
 
@@ -39,4 +58,10 @@ public class Alumno {
 
     public Double getPromedio() { return promedio; }
     public void setPromedio(Double promedio) { this.promedio = promedio; }
+
+    public String getFotoPerfilUrl() { return fotoPerfilUrl; }
+    public void setFotoPerfilUrl(String fotoPerfilUrl) { this.fotoPerfilUrl = fotoPerfilUrl; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }
