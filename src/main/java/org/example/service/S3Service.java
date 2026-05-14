@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -36,11 +37,12 @@ public class S3Service {
                 .bucket(bucket)
                 .key(key)
                 .contentType(file.getContentType())
+                .acl(ObjectCannedACL.PUBLIC_READ)
                 .build();
 
         s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
 
-        return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
+        return "https://" + bucket + ".s3.amazonaws.com/" + key;
     }
 
     private String obtenerExtension(String filename) {
