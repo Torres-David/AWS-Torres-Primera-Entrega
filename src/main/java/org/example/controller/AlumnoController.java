@@ -145,7 +145,7 @@ public class AlumnoController {
         }
         Alumno alumno = opt.get();
         if (alumno.getPassword() == null || !alumno.getPassword().equals(password)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("Contraseña incorrecta"));
         }
         SesionAlumno sesion = new SesionAlumno();
@@ -155,7 +155,7 @@ public class AlumnoController {
         sesion.setActive(true);
         sesion.setSessionString(generarSessionString(128));
         sesionAlumnoRepository.save(sesion);
-        return ResponseEntity.status(HttpStatus.CREATED).body(sesion);
+        return ResponseEntity.ok(sesion);
     }
 
     @PostMapping("/{id}/session/verify")

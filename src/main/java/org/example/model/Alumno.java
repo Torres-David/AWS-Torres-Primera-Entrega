@@ -5,13 +5,13 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.data.domain.Persistable;
 
 @Entity
 @Table(name = "alumnos")
-public class Alumno implements Persistable<Long> {
+public class Alumno {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "El campo nombres no debe estar vacío")
@@ -31,16 +31,6 @@ public class Alumno implements Persistable<Long> {
     private String fotoPerfilUrl;
 
     private String password;
-
-    @Transient
-    private boolean isNew = true;
-
-    @PostLoad
-    @PostPersist
-    void markNotNew() { this.isNew = false; }
-
-    @Override
-    public boolean isNew() { return isNew; }
 
     public Alumno() {}
 
